@@ -15,11 +15,13 @@
             <div class="row" style="width:800px; margin:0 auto;">
                 <div class="col-lg-8  offset-lg-2">
                     <h2 class="mt-5">{{ "Sign Language Recognition App" }}</h2>
-                    <img src="{{ url_for('video') }}" width="50%"/>
-                    <form method="post" action="/">
-                        <input type="submit" value="Start/Stop Recording" name="rec" />
-                    </form>
-                    <h3 style="font-family:courier;">Instructions:</h3>
+                    
+    				<form method="post" action="{{ url_for('tasks') }}">
+						<input type="submit" value="Stop/Start" name="stop" />
+						<input type="submit" value="Start/Stop Recording" name="rec" />
+					</form>
+					<img src="{{ url_for('video') }}" width="50%"/>
+                    <h3 style="font-family:courier;">Instructions:  </h3>
                     <ol style="font-family:courier;">
                     <li>Start/Stop Recording--Toggle between starting and stopping video recording</li>	
                 </div>

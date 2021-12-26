@@ -18,14 +18,17 @@
                     <h2 class="mt-5">{{ "Sign Language Recognition App" }}</h2>
                     
 					<button id="camBtn" class="btn btn-success" name="stop">Start</button>
-                    <button id="recBtn" class="btn btn-success"name="rec">Start Recording</button>
-                    <div id="videoDiv"></div>
-                    <h3 style="font-family:courier;">Instructions:  </h3>
-                    <ol style="font-family:courier;">
-                    <li>Start/Stop Recording--Toggle between starting and stopping video recording</li>	
+                    <button id="recBtn" disabled='' class="btn btn-success"name="rec">Start Recording</button>
+                    <div id="videoDiv">
+                        <img id="videoPlaceholder" src="{{ url_for('static', filename='images/videoplaceholder.jpg') }}"/ width="600" height="500">
+                        <video autoplay playsinline id="videoElement" width="600" height="500"></video>
+                    </div>
+                    <canvas id="canvas"  width="600" height="500"></canvas>
                 </div>
             </div>
         </div>
+        <script src="{{ url_for('static', filename='scripts/jquery-3.6.0.js') }}"></script>        
+        <script src="{{ url_for('static', filename='scripts/socket.io.js') }}"></script>
         <script src="{{ url_for('static', filename='scripts/main.js') }}"></script>
     </body>
 </html>

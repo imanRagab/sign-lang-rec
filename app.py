@@ -1,93 +1,61 @@
-# import cv2
+import cv2
 from flask import Flask, render_template, Response, request
-# import datetime, time
-# from threading import Thread
+import datetime, time
+from threading import Thread
+from flask_socketio import SocketIO
+import numpy as np
+import base64
+from flask import send_from_directory  
+import os   
 
-# global rec_frame, switch, rec, out
+global rec, out
 
-# switch = 1
-# rec = 0
-
-# cam = cv2.VideoCapture(0)
-
-
-# def record(out):
-#     global rec_frame
-#     while (rec):
-#         time.sleep(0.05)
-#         out.write(cv2.flip(rec_frame, 1))
-
+rec = False
 
 app = Flask(__name__)
 
+socketio = SocketIO(app)
 
-# def generate_frames():
-#     global out, rec_frame
-#     while True:
-#         if (rec):
-#             ### read the camera frame
-#             success, frame = cam.read()
-#             rec_frame = frame
-#             frame = cv2.putText(cv2.flip(frame, 1), "Recording...", (0, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255),
-#                                 4)
-#             frame = cv2.flip(frame, 1)
+@socketio.event
+def connect():
+	print("CONNECTED")
 
-#         if not success:
-#             break
-#         else:
-#             ret, buffer = cv2.imencode('.jpg', cv2.flip(frame, 1))
-#             frame = buffer.tobytes()
+@socketio.on('image')
+def handle_image(data):
+    if rec:
+        global out
+        image = readb64(data)   
+        out.write(cv2.flip(image, 1))
 
-#         yield (b'--frame\r\n'
-#                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-
+def readb64(base64_string):
+    idx = base64_string.find('base64,')
+    base64_string  = base64_string[idx+7:]
+    jpg_original = base64.b64decode(base64_string)
+    jpg_as_np = np.frombuffer(jpg_original, dtype=np.uint8)
+    return cv2.imdecode(jpg_as_np, flags=1)
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
+@app.route('/record', methods=['GET'])
+def start_stop_record():
+    global rec, out
+    print(request.args.get('start'))
+    if request.args.get('start') == 'true':
+        rec = True
+        now = datetime.datetime.now()
+        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        out = cv2.VideoWriter('./media/vid_{}.avi'.format(str(now).replace(":", '')), fourcc, 20.0, (600, 500))
+    else:
+        rec = False
+        out.release()
 
-# @app.route('/video')
-# def video():
-#     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+    return Response(status = 200)
 
-
-# @app.route('/requests', methods=['POST', 'GET'])
-# def tasks():
-#     global switch, cam
-#     if request.method == 'POST':
-
-#         if request.form.get('stop') == 'Stop/Start':
-
-#             if (switch == 1):
-#                 switch = 0
-#                 cam.release()
-#                 cv2.destroyAllWindows()
-
-#             else:
-#                 cam = cv2.VideoCapture(0)
-#                 switch = 1
-#         elif request.form.get('rec') == 'Start/Stop Recording':
-#             global rec, out
-#             rec = not rec
-#             if (rec):
-#                 now = datetime.datetime.now()
-#                 fourcc = cv2.VideoWriter_fourcc(*'XVID')
-#                 out = cv2.VideoWriter('./media/vid_{}.avi'.format(str(now).replace(":", '')), fourcc, 20.0, (640, 480))
-#                 # Start new thread for recording the video
-#                 thread = Thread(target=record, args=[out, ])
-#                 thread.start()
-#             elif (rec == False):
-#                 out.release()
-
-
-#     elif request.method == 'GET':
-#         return render_template('index.html')
-#     return render_template('index.html')
-
+@app.route('/favicon.ico') 
+def favicon(): 
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 if __name__ == '__main__':
-    app.run(debug=False)
-
-# cam.release()
-# cv2.destroyAllWindows()
+    socketio.run(app)

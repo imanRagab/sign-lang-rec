@@ -1,7 +1,6 @@
 import cv2
 from flask import Flask, render_template, Response, request
-import datetime, time
-from threading import Thread
+import datetime
 from flask_socketio import SocketIO
 import numpy as np
 import base64
@@ -14,7 +13,7 @@ rec = False
 
 app = Flask(__name__)
 
-socketio = SocketIO(app)
+socketio = SocketIO(app, manage_session=False)
 
 @socketio.event
 def connect():

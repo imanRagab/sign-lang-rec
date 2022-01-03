@@ -7,7 +7,7 @@ import base64
 from flask import send_from_directory  
 import os   
 
-global rec, out
+global rec, out, video_name
 
 rec = False
 
@@ -39,22 +39,28 @@ def index():
 
 @app.route('/record', methods=['GET'])
 def start_stop_record():
-    global rec, out
+    global rec, out, video_name
     print(request.args.get('start'))
     if request.args.get('start') == 'true':
         rec = True
         now = datetime.datetime.now()
-        fourcc = cv2.VideoWriter_fourcc(*'XVID')
-        out = cv2.VideoWriter('./media/vid_{}.avi'.format(str(now).replace(":", '')), fourcc, 20.0, (600, 500))
+        fourcc = cv2.VideoWriter_fourcc(*'MP4V')
+        video_name = 'media/vid_{}.mp4'.format(str(now).replace(":", '').replace(" ", '').replace('.', ''))
+        out = cv2.VideoWriter(video_name, fourcc, 20.0, (640, 480))
     else:
         rec = False
         out.release()
+        return {'video_name': video_name}
 
     return Response(status = 200)
 
 @app.route('/favicon.ico') 
 def favicon(): 
     return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
+@app.route("/media/<path:path>")
+def media_dir(path):
+    return send_from_directory("media", path)
 
 if __name__ == '__main__':
     socketio.run(app)

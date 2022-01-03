@@ -20,10 +20,11 @@
 					<button id="camBtn" class="btn btn-success" name="stop">Start</button>
                     <button id="recBtn" disabled='' class="btn btn-success"name="rec">Start Recording</button>
                     <div id="videoDiv">
-                        <img id="videoPlaceholder" src="{{ url_for('static', filename='images/videoplaceholder.jpg') }}"/ width="600" height="500">
-                        <video autoplay playsinline id="videoElement" width="600" height="500"></video>
+                        <img id="videoPlaceholder" src="{{ url_for('static', filename='images/videoplaceholder.jpg') }}"/ width="640" height="480">
+                        <video autoplay playsinline id="videoElement" width="640" height="480" display="none"></video>
+                        <video autoplay playsinline id="videoRecordElement" width="640" height="480" display="none"></video>
                     </div>
-                    <canvas id="canvas"  width="600" height="500"></canvas>
+                    <canvas id="canvas"  width="640" height="480"></canvas>
                 </div>
             </div>
         </div>

@@ -44,8 +44,8 @@ def start_stop_record():
     if request.args.get('start') == 'true':
         rec = True
         now = datetime.datetime.now()
-        fourcc = cv2.VideoWriter_fourcc(*'MP4V')
-        video_name = 'media/vid_{}.mp4'.format(str(now).replace(":", '').replace(" ", '').replace('.', ''))
+        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        video_name = 'media/vid_{}.avi'.format(str(now).replace(":", '').replace(" ", '').replace('.', ''))
         out = cv2.VideoWriter(video_name, fourcc, 20.0, (640, 480))
     else:
         rec = False

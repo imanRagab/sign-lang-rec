@@ -3,17 +3,21 @@ $(document).ready(function() {
     var videoRecord = document.getElementById("videoRecordElement");
     var camBtn = document.getElementById("camBtn");
     var recBtn = document.getElementById("recBtn");
+    var predBtn = document.getElementById("predBtn");
+    var predtxt = document.getElementById("pred");
     var canvas = document.getElementById('canvas');
     var context = canvas.getContext('2d');
     var appUrl = window.location.protocol + '//' + document.domain + ':' + location.port
     var socket = io.connect(appUrl);
-    const FPS = 6;
+    const FPS = 200;
     var facingMode = "user"; 
     var constraints = { audio: false, video: { facingMode: facingMode } }; 
     var camStatus = false;
     var recStatus = false;
     var recordInterval
     var videoPlaceholder = document.getElementById('videoPlaceholder')
+    var mediaRecorder;
+    var blobsRecorded = [];
 
     socket.on('connect', function(){
         console.log("Connected...!", socket.connected)
@@ -21,13 +25,14 @@ $(document).ready(function() {
 
     camBtn.addEventListener("click", handleCamera);
     recBtn.addEventListener("click", handleVideoRecord);
-
+    predBtn.addEventListener("click", handlePrediction);
 
     function handleCamera() {
 
-        camBtn.innerText = camStatus ? "Start" : "Stop"
-        camBtn.className = camStatus ? "btn btn-success" : "btn btn-danger";
-        if(!camStatus) { 
+        camStatus = !camStatus;    
+        camBtn.innerText = !camStatus ? "Open Camera" : "Stop Camera"
+        camBtn.className = !camStatus ? "btn btn-success" : "btn btn-danger";
+        if(camStatus) { 
             recBtn.disabled = false;
             handleVideo('stream') 
             navigator.mediaDevices.getUserMedia(constraints)
@@ -36,20 +41,19 @@ $(document).ready(function() {
                                 video.play();
                             });
         } else {
-            stopStreamedVideo(video);
-            recBtn.disabled = true;
-            handleVideo();
-            if (recStatus) handleVideoRecord();
+            stopCamera();
         }
-        camStatus = !camStatus;    
     }
 
     async function handleVideoRecord() {
-        recBtn.innerText = recStatus ?  "Start Recording" : "Stop Recording";
-        recBtn.className = recStatus ?  "btn btn-success" : "btn btn-danger";
+        recStatus = !recStatus;
+        recBtn.innerText = !recStatus ?  "Start Recording" : "Stop Recording";
+        recBtn.className = !recStatus ?  "btn btn-success" : "btn btn-danger";
         // record streaming
         await sendRecordRequest()
-        if (!recStatus) {
+        if (recStatus) {
+            blobsRecorded = [];
+            clientRecord();
             recordInterval = setInterval(() => {
                 width=video.width;
                 height=video.height;
@@ -59,12 +63,33 @@ $(document).ready(function() {
                 socket.emit('image', data);
             }, 1000/FPS);
         } else {
-            clearInterval(recordInterval);
+            stopRecord();
+        }
+    }
+
+    function handlePrediction() {
+        // @todo
+        // call model prediction api
+        predtxt.innerHTML = "Prediction"
+        predBtn.disabled = true;
+    }
+
+    function stopCamera() {
+        stopStreamedVideo(video);
+        recBtn.disabled = true;
+        if (recStatus) handleVideoRecord();
+        handleVideo();
+    }
+
+    function stopRecord() {
+        mediaRecorder.stop(); 
+        clearInterval(recordInterval);
+        if (camStatus) { 
+            playRecord();
+            handleCamera();
             handleVideo('record');
         }
-        recStatus = !recStatus;
-    }
-    
+    }    
 
     function stopStreamedVideo(videoElem) {
         const stream = videoElem.srcObject;
@@ -79,18 +104,7 @@ $(document).ready(function() {
         $.ajax({
             type: "GET",
             url: '/record',
-            data: { 'start' : !recStatus},
-            success: function(data){
-                if(!recStatus) {
-                    let videoUrl = appUrl + '/' + data.video_name
-                    let source = document.createElement('source');
-                    source.src = videoUrl;
-                    source.type = 'video/mp4'
-                    videoRecord.innerHTML = '';
-                    videoRecord.appendChild(source);
-                    videoRecord.play();
-                }
-            }
+            data: { 'start' : recStatus}
         });
     }
 
@@ -101,11 +115,14 @@ $(document).ready(function() {
                 videoPlaceholder.style.display = "none";     
                 video.style.display = "block";
                 videoRecord.style.display = "none"; 
+                predBtn.disabled = true
+                predtxt.innerHTML = "Predicted word will appear here"
                 break;
             case 'record':
                 videoPlaceholder.style.display = "none";     
                 video.style.display = "none";
                 videoRecord.style.display = "block"; 
+                predBtn.disabled = false
                 break;
             default:
                 videoPlaceholder.style.display = "block";     
@@ -116,4 +133,17 @@ $(document).ready(function() {
     }
 
 
+    function clientRecord() {
+        mediaRecorder = new MediaRecorder(video.srcObject, { mimeType: 'video/webm' });  
+        mediaRecorder.addEventListener('dataavailable', function(e) {
+            blobsRecorded.push(e.data);      
+        });
+        mediaRecorder.start(1000);
+    }
+    
+    function playRecord() {
+        var type = (blobsRecorded[0] || {}).type;
+        var superBuffer = new Blob(blobsRecorded, {type});
+        videoRecord.src = window.URL.createObjectURL(superBuffer);
+    }
 });

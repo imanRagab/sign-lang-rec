@@ -15,16 +15,19 @@
         <div class="container">
             <div class="row" style="width:800px; margin:0 auto;">
                 <div class="col-lg-8  offset-lg-2">
-                    <h2 class="mt-5">{{ "Sign Language Recognition App" }}</h2>
-                    
-					<button id="camBtn" class="btn btn-success" name="stop">Start</button>
+                    <h2 class="mt-5 p-1 border text-center" style="border-radius:25px; font-family: serif;">{{ "Sign Language Recognition" }}</h2>
+                    <br>
+					<button id="camBtn" class="btn btn-success" name="stop">Open Camera</button>
                     <button id="recBtn" disabled='' class="btn btn-success"name="rec">Start Recording</button>
+                    <button id="predBtn" disabled='' class="btn btn-success"name="rec">Predict</button>
+                    <br><br>
                     <div id="videoDiv">
                         <img id="videoPlaceholder" src="{{ url_for('static', filename='images/videoplaceholder.jpg') }}"/ width="640" height="480">
-                        <video autoplay playsinline id="videoElement" width="640" height="480" display="none"></video>
-                        <video autoplay playsinline id="videoRecordElement" width="640" height="480" display="none"></video>
+                        <video autoplay playsinline id="videoElement" width="640" height="480" style="display:none;"></video>
+                        <video controls playsinline id="videoRecordElement" width="640" height="480" style="display:none;"></video>
+                        <br><br><strong><p id="pred" class="text-center p-2 border border-success" style="border-radius:25px; font-family: serif;">Predicted word will appear here</p></strong>
                     </div>
-                    <canvas id="canvas"  width="640" height="480"></canvas>
+                    <canvas id="canvas"  width="640" height="480" style="display:none;"></canvas>
                 </div>
             </div>
         </div>

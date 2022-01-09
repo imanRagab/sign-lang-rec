@@ -4,74 +4,77 @@ $(document).ready(function() {
     var camBtn = document.getElementById("camBtn");
     var recBtn = document.getElementById("recBtn");
     var predBtn = document.getElementById("predBtn");
+    var uploadBtn = document.getElementById("uploadBtn");
+    var uploadForm = document.getElementById("uploadForm")
     var predtxt = document.getElementById("pred");
-    var canvas = document.getElementById('canvas');
-    var context = canvas.getContext('2d');
     var appUrl = window.location.protocol + '//' + document.domain + ':' + location.port
-    var socket = io.connect(appUrl);
-    const FPS = 200;
     var facingMode = "user"; 
     var constraints = { audio: false, video: { facingMode: facingMode } }; 
     var camStatus = false;
     var recStatus = false;
-    var recordInterval
     var videoPlaceholder = document.getElementById('videoPlaceholder')
     var mediaRecorder;
     var blobsRecorded = [];
+    var blob;
+    var mode;
 
-    socket.on('connect', function(){
-        console.log("Connected...!", socket.connected)
-    });
+    ///////// Event Listeners ////////////
 
     camBtn.addEventListener("click", handleCamera);
     recBtn.addEventListener("click", handleVideoRecord);
     predBtn.addEventListener("click", handlePrediction);
+    uploadBtn.addEventListener("click", handleUpload);
+    uploadForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+    });
 
     function handleCamera() {
-
         camStatus = !camStatus;    
         camBtn.innerText = !camStatus ? "Open Camera" : "Stop Camera"
         camBtn.className = !camStatus ? "btn btn-success" : "btn btn-danger";
         if(camStatus) { 
-            recBtn.disabled = false;
-            handleVideo('stream') 
-            navigator.mediaDevices.getUserMedia(constraints)
-                            .then(function success(stream) { 
-                                video.srcObject = stream;
-                                video.play();
-                            });
+            openCamera();
         } else {
             stopCamera();
         }
     }
 
-    async function handleVideoRecord() {
+    function handleVideoRecord() {
         recStatus = !recStatus;
         recBtn.innerText = !recStatus ?  "Start Recording" : "Stop Recording";
         recBtn.className = !recStatus ?  "btn btn-success" : "btn btn-danger";
-        // record streaming
-        await sendRecordRequest()
         if (recStatus) {
-            blobsRecorded = [];
-            clientRecord();
-            recordInterval = setInterval(() => {
-                width=video.width;
-                height=video.height;
-                context.drawImage(video, 0, 0, width , height);
-                var data = canvas.toDataURL('image/jpeg', 0.5);
-                context.clearRect(0, 0, width,height );
-                socket.emit('image', data);
-            }, 1000/FPS);
+            startRecord();
         } else {
             stopRecord();
         }
     }
 
     function handlePrediction() {
-        // @todo
-        // call model prediction api
-        predtxt.innerHTML = "Prediction"
         predBtn.disabled = true;
+        if (mode == 'cam') saveRecord();
+        predtxt.innerHTML = getModelPrediction();
+    }
+
+    function handleUpload() {
+        var form = new FormData(uploadForm);
+        mode = 'file'
+        uploadRecord(form);
+        // videoRecord.src = appUrl + '/' + videoName;
+        // handleVideo('record');
+    }
+
+
+    ///////// Helper Functions ////////////
+
+    function openCamera() {
+        recBtn.disabled = false;
+        handleVideo('stream') 
+        navigator.mediaDevices.getUserMedia(constraints)
+                        .then(function success(stream) { 
+                            video.srcObject = stream;
+                            video.play();
+                        });
     }
 
     function stopCamera() {
@@ -83,7 +86,6 @@ $(document).ready(function() {
 
     function stopRecord() {
         mediaRecorder.stop(); 
-        clearInterval(recordInterval);
         if (camStatus) { 
             playRecord();
             handleCamera();
@@ -100,23 +102,17 @@ $(document).ready(function() {
         videoElem.srcObject = null;
     }
 
-    function sendRecordRequest() {
-        $.ajax({
-            type: "GET",
-            url: '/record',
-            data: { 'start' : recStatus}
-        });
-    }
-
-    // this function handle which will appear between (default placeholder, camera stream, recorded video)
+    /* this function handle which will appear between 
+     (default placeholder, camera stream, recorded video) 
+    */
     function handleVideo(mode='') {
+        predtxt.innerHTML = "Predicted word will appear here"
         switch(mode) {
             case 'stream':
                 videoPlaceholder.style.display = "none";     
                 video.style.display = "block";
                 videoRecord.style.display = "none"; 
                 predBtn.disabled = true
-                predtxt.innerHTML = "Predicted word will appear here"
                 break;
             case 'record':
                 videoPlaceholder.style.display = "none";     
@@ -132,11 +128,16 @@ $(document).ready(function() {
 
     }
 
-
-    function clientRecord() {
+    function startRecord() {
         mediaRecorder = new MediaRecorder(video.srcObject, { mimeType: 'video/webm' });  
         mediaRecorder.addEventListener('dataavailable', function(e) {
             blobsRecorded.push(e.data);      
+        });
+        mediaRecorder.addEventListener('stop', function() {
+            blob = new Blob(blobsRecorded, {
+                'type': "video/x-matroska;codecs=avc1"
+            });
+            blobsRecorded = [];
         });
         mediaRecorder.start(1000);
     }
@@ -145,5 +146,37 @@ $(document).ready(function() {
         var type = (blobsRecorded[0] || {}).type;
         var superBuffer = new Blob(blobsRecorded, {type});
         videoRecord.src = window.URL.createObjectURL(superBuffer);
+    }
+
+    function saveRecord() {
+        let form = new FormData();
+        form.append('video',  blob);
+        uploadRecord(form);
+    }
+
+    function uploadRecord(data) {
+        $.ajax({
+            type: 'POST',
+            url: '/save-record',
+            data: data,
+            cache: false,
+            processData: false,
+            contentType: false,
+            responseType: 'blob',
+            enctype: 'multipart/form-data',
+        }).done(function(data) {
+            if (mode == 'file') {
+                videoRecord.src = appUrl + '/' + data.video_name;
+                handleVideo('record');
+            }
+        });
+
+    }
+
+    function getModelPrediction() {
+        /* @todo
+         call model prediction api 
+        */
+        return "Prediction"; // currently temp text
     }
 });

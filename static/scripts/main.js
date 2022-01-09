@@ -16,7 +16,7 @@ $(document).ready(function() {
     var mediaRecorder;
     var blobsRecorded = [];
     var blob;
-    var mode;
+    var recordMode;
 
     ///////// Event Listeners ////////////
 
@@ -52,16 +52,14 @@ $(document).ready(function() {
 
     function handlePrediction() {
         predBtn.disabled = true;
-        if (mode == 'cam') saveRecord();
+        if (recordMode == 'cam') saveRecord();
         predtxt.innerHTML = getModelPrediction();
     }
 
     function handleUpload() {
         var form = new FormData(uploadForm);
-        mode = 'file'
+        recordMode = 'file'
         uploadRecord(form);
-        // videoRecord.src = appUrl + '/' + videoName;
-        // handleVideo('record');
     }
 
 
@@ -129,6 +127,7 @@ $(document).ready(function() {
     }
 
     function startRecord() {
+        recordMode = 'cam'
         mediaRecorder = new MediaRecorder(video.srcObject, { mimeType: 'video/webm' });  
         mediaRecorder.addEventListener('dataavailable', function(e) {
             blobsRecorded.push(e.data);      
@@ -165,7 +164,7 @@ $(document).ready(function() {
             responseType: 'blob',
             enctype: 'multipart/form-data',
         }).done(function(data) {
-            if (mode == 'file') {
+            if (recordMode == 'file') {
                 videoRecord.src = appUrl + '/' + data.video_name;
                 handleVideo('record');
             }

@@ -17,6 +17,9 @@ def index():
 def save_record():
     global video_name
     now = datetime.datetime.now()
+    uploadDir = 'media'
+    if not os.path.exists(uploadDir):
+        os.makedirs(uploadDir)
     video_name = 'media/vid_{}.webm'.format(str(now).replace(":", '').replace(" ", '').replace('.', ''))
     video = request.files['video']
     video.save(video_name)

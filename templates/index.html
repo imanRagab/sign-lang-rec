@@ -6,7 +6,8 @@
         <title></title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="">
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style/bootstrap.css') }}">`
+
     </head>
 
 
@@ -14,18 +15,27 @@
         <div class="container">
             <div class="row" style="width:800px; margin:0 auto;">
                 <div class="col-lg-8  offset-lg-2">
-                    <h2 class="mt-5">{{ "Sign Language Recognition App" }}</h2>
-                    
-    				<form method="post" action="{{ url_for('tasks') }}">
-						<input type="submit" value="Stop/Start" name="stop" />
-						<input type="submit" value="Start/Stop Recording" name="rec" />
-					</form>
-					<img src="{{ url_for('video') }}" width="50%"/>
-                    <h3 style="font-family:courier;">Instructions:  </h3>
-                    <ol style="font-family:courier;">
-                    <li>Start/Stop Recording--Toggle between starting and stopping video recording</li>	
+                    <h2 class="mt-5 p-1 border text-center" style="border-radius:25px; font-family: serif;">{{ "Sign Language Recognition" }}</h2>
+                    <br>
+                    <form id="uploadForm" method="post">
+                        <input type="file" name="video" id="fileToUpload"/>
+                        <button type="button" id="uploadBtn" class="btn btn-success">Upload</button>
+                    </form>
+                    <br><br>
+					<button id="camBtn" class="btn btn-success">Open Camera</button>
+                    <button id="recBtn" disabled='' class="btn btn-success">Start Recording</button>
+                    <button id="predBtn" disabled='' class="btn btn-success">Predict</button>
+                    <br><br>
+                    <div id="videoDiv">
+                        <img id="videoPlaceholder" src="{{ url_for('static', filename='images/videoplaceholder.jpg') }}"/ width="640" height="480">
+                        <video autoplay playsinline id="videoElement" width="640" height="480" style="display:none;"></video>
+                        <video controls playsinline id="videoRecordElement" width="640" height="480" style="display:none;"></video>
+                        <br><br><strong><p id="pred" class="text-center p-2 border border-success" style="border-radius:25px; font-family: serif;">Predicted word will appear here</p></strong>
+                    </div>
                 </div>
             </div>
         </div>
+        <script src="{{ url_for('static', filename='scripts/jquery-3.6.0.js') }}"></script>        
+        <script src="{{ url_for('static', filename='scripts/main.js') }}"></script>
     </body>
 </html>

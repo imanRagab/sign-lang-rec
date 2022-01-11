@@ -3,7 +3,8 @@
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title></title>
+        <title>
+        </title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style/bootstrap.css') }}">`
@@ -12,26 +13,34 @@
 
 
     <body>
-        <div class="container">
-            <div class="row" style="width:800px; margin:0 auto;">
-                <div class="col-lg-8  offset-lg-2">
-                    <h2 class="mt-5 p-1 border text-center" style="border-radius:25px; font-family: serif;">{{ "Sign Language Recognition" }}</h2>
+        <div class="logo" style="padding: 0rem 5rem;width: 700px;">
+            <img  src="{{url_for('static', filename='images/SignLogo.jpg')}}"/ width ="25%",height="15%" style="float: left;display:inherit;">
+        </div>
+        <div class="container" style="background-color: #23313e;">
+            <div class="row" style="width: 100%; margin:1rem auto;">
+                <div class="col-lg-8  offset-lg-2" style="text-align: center; padding: 0rem 4rem;">
+                    <h2 class="mt-5 p-1 border text-center" style="border-radius:25px; font-family: serif;color: white; display: inline-table;">{{ "Sign Language Recognition" }}</h2>
                     <br>
-                    <form id="uploadForm" method="post">
-                        <input type="file" name="video" id="fileToUpload"/>
-                        <button type="button" id="uploadBtn" class="btn btn-success">Upload</button>
-                    </form>
-                    <br><br>
+                    <br>
 					<button id="camBtn" class="btn btn-success">Open Camera</button>
                     <button id="recBtn" disabled='' class="btn btn-success">Start Recording</button>
                     <button id="predBtn" disabled='' class="btn btn-success">Predict</button>
-                    <br><br>
+                    <br>
                     <div id="videoDiv">
+                        <br>
                         <img id="videoPlaceholder" src="{{ url_for('static', filename='images/videoplaceholder.jpg') }}"/ width="640" height="480">
                         <video autoplay playsinline id="videoElement" width="640" height="480" style="display:none;"></video>
                         <video controls playsinline id="videoRecordElement" width="640" height="480" style="display:none;"></video>
-                        <br><br><strong><p id="pred" class="text-center p-2 border border-success" style="border-radius:25px; font-family: serif;">Predicted word will appear here</p></strong>
+                        <br>
                     </div>
+                    <br>
+                    <form id="uploadForm" method="post">
+                        <br>
+                        <input type="file" name="video" id="fileToUpload"/>
+                        <button type="button" id="uploadBtn" class="btn btn-success">Upload</button>
+                    </form>
+                    <br>
+                    <br><strong><p id="pred" class="text-center p-2 border border-success" style="border-radius:25px; font-family: serif;color: white;">Predicted word will appear here</p></strong>
                 </div>
             </div>
         </div>
